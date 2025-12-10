@@ -15,6 +15,7 @@ struct ContentView: View {
     
     @State private var speechService = SpeechService()
     @State private var llmService = LLMService()
+    @State private var voiceService = VoiceService()
     
     // The "Memory" Service
     private let embeddingService = EmbeddingService()
@@ -52,11 +53,14 @@ struct ContentView: View {
             // 2. Transcription Area
             ScrollViewReader { proxy in
                 ScrollView {
-                    Text(speechService.transcript.isEmpty ? "Listening..." : speechService.transcript)
-                        .font(.system(size: 24, weight: .medium, design: .rounded))
-                        .padding()
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .id("bottom")
+                    Text(speechService.transcript.isEmpty
+                         ? (speechService.isRecording ? "Listening..." : "Tap the microphone to start")
+                         : speechService.transcript
+                    )
+                    .font(.system(size: 24, weight: .medium, design: .rounded))
+                    .padding()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .id("bottom")
                 }
                 .onChange(of: speechService.transcript) { _, newValue in
                     withAnimation { proxy.scrollTo("bottom", anchor: .bottom) }
@@ -69,9 +73,18 @@ struct ContentView: View {
             // 3. AI Suggestions
             VStack(spacing: 12) {
                 if let suggestions = llmService.suggestions {
-                    SuggestionButton(title: suggestions.casual, icon: "hand.wave", color: .blue)
-                    SuggestionButton(title: suggestions.formal, icon: "briefcase", color: .purple)
-                    SuggestionButton(title: suggestions.quick, icon: "bolt", color: .orange)
+                    SuggestionButton(title: suggestions.casual, icon: "hand.wave", color: .blue, action: {
+                        speechService.stopTranscribing()
+                        voiceService.speak(suggestions.casual)
+                    })
+                    SuggestionButton(title: suggestions.formal, icon: "briefcase", color: .purple, action: {
+                        speechService.stopTranscribing()
+                        voiceService.speak(suggestions.formal)
+                    })
+                    SuggestionButton(title: suggestions.quick, icon: "bolt", color: .orange, action: {
+                        speechService.stopTranscribing()
+                        voiceService.speak(suggestions.quick)
+                    })
                 } else {
                     Text("Start speaking to see suggestions...")
                         .font(.caption)
@@ -99,6 +112,15 @@ struct ContentView: View {
             // Seed data for testing (only if empty)
             if scenarios.isEmpty {
                 Task { await DataSeeder.seed(context: modelContext) }
+            }
+            
+            // setup auto-resume logic
+            voiceService.onSpeechEnded = {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    if !speechService.isRecording {
+                        speechService.startTranscribing()
+                    }
+                }
             }
         }
     }
@@ -143,9 +165,10 @@ struct SuggestionButton: View {
     let title: String
     let icon: String
     let color: Color
+    let action: () -> Void
     
     var body: some View {
-        Button(action: { print("Selected: \(title)") }) {
+        Button(action: action) {
             HStack {
                 Image(systemName: icon)
                 Text(title)

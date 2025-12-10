@@ -36,10 +36,12 @@ class SpeechService {
         // 3. Configure the audio session
         let audioSession = AVAudioSession.sharedInstance()
         do {
-            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+            // CHANGE: Use .playAndRecord so we can speak later.
+            // CHANGE: Use .defaultToSpeaker so it plays out loud (not earpiece).
+            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.duckOthers, .defaultToSpeaker])
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
-            self.errorMessage = "Could not start audio: \(error.localizedDescription)"
+            self.errorMessage = "Audio session failed: \(error.localizedDescription)"
             return
         }
         

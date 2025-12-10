@@ -54,7 +54,7 @@ class LLMService {
                 prompt += "\n\nRelevant Context: The user is in a \(activeContext) scenario. Tailor replies to this setting."
             }
             
-            prompt += "\n\nGenerate 3 likely replies for the user to choose from"
+            prompt += "\n\nGenerate 3 likely responses."
             
             // 4. Ask the Neural Engine to generate the struct
             // This runs 100% offline on the NPU
