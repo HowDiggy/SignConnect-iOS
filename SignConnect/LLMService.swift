@@ -31,7 +31,7 @@ class LLMService {
     // 2. The System Model (Apple Intelligence)
     private let model = SystemLanguageModel.default
     
-    func generateSuggestions(for transcript: String) async {
+    func generateSuggestions(for transcript: String, context: String? = nil) async {
         guard !transcript.isEmpty else { return }
         
         await MainActor.run {
@@ -44,12 +44,17 @@ class LLMService {
             // The 'model' is just the brain; the 'session' is the conversation.
             let session = LanguageModelSession(model: model)
             
-            let prompt = """
+            var prompt = """
             The user is deaf or non-verbal and using this app to communicate. 
             The conversation partner just said: "\(transcript)"
-            
-            Generate 3 likely replies for the user to choose from.
             """
+            
+            // Inject Memory if available
+            if let activeContext = context {
+                prompt += "\n\nRelevant Context: The user is in a \(activeContext) scenario. Tailor replies to this setting."
+            }
+            
+            prompt += "\n\nGenerate 3 likely replies for the user to choose from"
             
             // 4. Ask the Neural Engine to generate the struct
             // This runs 100% offline on the NPU
