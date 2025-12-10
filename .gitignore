@@ -1,0 +1,15 @@
+# Xcode
+.DS_Store
+*/build/
+*.os
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xccheckout
+*.xccurrentversion
+
+# Swift Package Manager
+.swiftpm/xcode/
+.build/
+
+# Simulator
+DerivedData/
