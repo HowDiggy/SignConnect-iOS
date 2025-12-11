@@ -186,4 +186,6 @@ struct SuggestionButton: View {
 }
 #Preview {
     ContentView()
+    // Create a temporary, in-memory database just for this preview
+            .modelContainer(for: Scenario.self, inMemory: true)
 }
